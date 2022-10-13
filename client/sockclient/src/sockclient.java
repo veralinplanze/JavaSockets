@@ -5,14 +5,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+/* Client wrapper class  */
 class Client {
-    static final short PKG_SZ = 1024;
 
     /* You have to specify an exact address and port to connect a socket */
     public Client(String addr, int port, String filePath) {
         try {
             Socket client = new Socket(addr, port);
-            System.out.println("Starting file tranferring...");
+            System.out.println("Starting file transferring...");
             File file = new File(filePath);
             byte[] checksum;
 
@@ -30,8 +30,10 @@ class Client {
             /* Sending info to server, size of byte array first, next the contents of it */
             out.writeInt(nameBytes.length);
             out.write(nameBytes);
+
             out.writeInt(contentsBytes.length);
             out.write(contentsBytes);
+
             out.writeInt(checksum.length);
             out.write(checksum);
 
@@ -46,11 +48,13 @@ class Client {
         }
     }
 
+    /* Calculating checksum as MD5 cypher */
     private byte[] getCheckSum(File file) throws NoSuchAlgorithmException {
         System.out.println("Generating checksum...");
         MessageDigest md = MessageDigest.getInstance("MD5");
         try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
             while (dis.read() != -1) {
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,13 +64,11 @@ class Client {
         System.out.println("Generated checksum: " + Arrays.toString(checksum));
         return checksum;
     }
-
-
 }
 
+/* Main program entry */
 public class sockclient {
-
     public static void main(String[] args) {
-        Client client = new Client(args[0], Integer.parseInt(args[1]), args[2]);
+        new Client(args[0], Integer.parseInt(args[1]), args[2]);
     }
 }

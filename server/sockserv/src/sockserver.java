@@ -7,16 +7,19 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+/* Server wrapper class */
 class Server extends Thread {
+
     private ServerSocket server;
     private Socket client;
     private int timeout;
-    private final short PKG_SZ = 512;
 
+    /* Seconds to milliseconds translation */
     public void setTimeout(int timeout) {
         this.timeout = timeout * 1000;
     }
 
+    /* Milliseconds to seconds translation */
     public int getTimeout() {
         return timeout / 1000;
     }
@@ -25,14 +28,17 @@ class Server extends Thread {
         return client != null;
     }
 
+    /* constructor contains 8888 port and 10 sec timeout 'by default' */
     public Server() {
         this(8888, 10);
     }
 
+    /* constructor with only one argument sees it as a port number and implies 10 sec timeout */
     public Server(int port) {
         this(port, 10);
     }
 
+    /* 2 arguments constructor */
     public Server(int port, int timeout) {
         try {
             /* Initializing server socket and binding it to specified port */
@@ -46,6 +52,7 @@ class Server extends Thread {
         }
     }
 
+    /* Server logic, runs in a separate thread */
     public void run() {
         try {
             System.out.println("Waiting for client to connect...");
@@ -71,14 +78,15 @@ class Server extends Thread {
 
             /* Comparing received checksum with generated one */
             boolean check = compareCheckSum(checksumBytes, file);
-            if(!check) System.out.println("Received data is corrupted according to the checksum");
+            if (!check) System.out.println("Received data is corrupted according to the checksum");
             else System.out.println("Data received successfully...");
 
-            /* Freeing sockets */
+            /* Freeing sockets and streams */
             client.close();
             server.close();
             in.close();
             out.close();
+
             System.out.println("Server shutdown.");
 
         } catch (SocketTimeoutException e) {
@@ -93,6 +101,7 @@ class Server extends Thread {
         MessageDigest md = MessageDigest.getInstance("MD5");
         try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
             while (dis.read() != -1) {
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -100,11 +109,13 @@ class Server extends Thread {
         byte[] checkSumCalculated = md.digest();
         System.out.println("Local  CheckSum: " + Arrays.toString(checkSumCalculated));
         System.out.println("Remote CheckSum: " + Arrays.toString(checkSumReceived));
+
         /* Comparing checksums as arrays */
         return Arrays.equals(checkSumCalculated, checkSumReceived);
     }
 }
 
+/* Server main entry point */
 public class sockserver {
     public static void main(String[] args) {
         Server server = null;
@@ -126,10 +137,11 @@ public class sockserver {
             server = new Server(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
         }
 
-        server.start();
-
-        /* Useless cycle while server timeout */
         try {
+            server.join();
+            //server.run(); // child thread closes after main one
+
+            /* Useless cycle while server timeout, thats what a separate thread for */
             for (int i = server.getTimeout(); !server.isClientConnected() && i > 0; --i) {
                 Thread.sleep(1000);
                 System.out.printf("Timeout in %d\n", i);
@@ -137,5 +149,6 @@ public class sockserver {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
     }
 }
